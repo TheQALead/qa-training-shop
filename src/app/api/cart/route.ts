@@ -24,10 +24,11 @@ export async function GET(request: NextRequest) {
 
     // Проверяем баг подсчёта суммы
     const cartSumBugEnabled = await isBugEnabled(userId, 'cart-sum-bug');
+    const itemCount = cartItems.length; // Количество разных товаров
 
     let displaySum = realSum;
-    if (cartSumBugEnabled) {
-      // БАГ: добавляем лишнее
+    if (cartSumBugEnabled && itemCount > 1) {
+      // БАГ: добавляем лишнее только когда несколько товаров в корзине
       if (realSum % 10 === 0) {
         displaySum = realSum + 1000;
       } else {

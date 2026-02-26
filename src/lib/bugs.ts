@@ -44,12 +44,12 @@ export const BUG_DEFINITIONS: BugDefinition[] = [
   {
     id: 'cart-sum-bug',
     name: 'Баг подсчёта суммы',
-    description: 'Если сумма % 10 == 0 → +1000, иначе → +139',
+    description: 'При нескольких товарах в корзине: если сумма % 10 == 0 → +1000, иначе → +139. При одном товаре сумма верная.',
     category: 'cart',
     categoryLabel: BUG_CATEGORIES.cart,
     defaultEnabled: true,
     severity: 'high',
-    howToFind: 'Сравнить реальную сумму с отображаемой',
+    howToFind: 'Сравнить реальную сумму с отображаемой при разном количестве товаров',
   },
   {
     id: 'card-duplicate-digit',

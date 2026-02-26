@@ -64,8 +64,10 @@ export async function POST(request: NextRequest) {
       0
     );
 
+    const itemCount = cartItems.length; // Количество разных товаров
     let displaySum = realSum;
-    if (cartSumBugEnabled) {
+    if (cartSumBugEnabled && itemCount > 1) {
+      // БАГ: добавляем лишнее только когда несколько товаров в корзине
       if (realSum % 10 === 0) {
         displaySum = realSum + 1000;
       } else {
