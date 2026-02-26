@@ -69,5 +69,6 @@ ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/db/custom.db
 
 # Entrypoint: create schema first, then start server
+# Use node to run prisma CLI directly from node_modules
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "npx prisma db push --skip-generate && curl -s http://localhost:3000/api/init; node server.js"]
+CMD ["sh", "-c", "node ./node_modules/prisma/build/index.js db push --skip-generate && node server.js"]
