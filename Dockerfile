@@ -40,7 +40,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install required system libraries for Prisma engine
-RUN apk add --no-cache dumb-init openssl libc6-compat
+RUN apk add --no-cache dumb-init openssl libc6-compat curl
 
 # Install prisma CLI globally for runtime
 RUN npm install -g prisma@6.19.2
