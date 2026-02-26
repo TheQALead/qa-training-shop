@@ -17,6 +17,7 @@ export const BUG_CATEGORIES = {
   cards: '💳 Карты',
   order: '📦 Заказы',
   easter: '🥚 Пасхалки',
+  ui: '🎨 Интерфейс',
 } as const;
 
 export const BUG_DEFINITIONS: BugDefinition[] = [
@@ -99,5 +100,15 @@ export const BUG_DEFINITIONS: BugDefinition[] = [
     defaultEnabled: true,
     severity: 'low',
     howToFind: 'Попробовать ввести цифры в поле Владелец при добавлении карты',
+  },
+  {
+    id: 'uncomfortable-buttons',
+    name: 'Неудобное расположение кнопки "Выход" или "Корзина"',
+    description: 'Кнопка "Выход" расположена рядом с кнопкой "Корзина", что может привести к случайному нажатию и выходу из системы.',
+    category: 'ui',
+    categoryLabel: BUG_CATEGORIES.ui,
+    defaultEnabled: true,
+    severity: 'low',
+    howToFind: 'Обратить внимание на расположение кнопок в шапке сайта',
   },
 ];

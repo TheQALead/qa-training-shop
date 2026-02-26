@@ -8,13 +8,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   ShoppingCart, 
   Trash2, 
   Plus, 
   Minus, 
   Package,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 export function ShopView() {
@@ -35,6 +43,7 @@ export function ShopView() {
   const [showCart, setShowCart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(0); // 0 - закрыт, 1 - добби, 2 - успех
 
   // Загрузка товаров
   const fetchProducts = useCallback(async () => {
@@ -167,6 +176,7 @@ export function ShopView() {
     }
 
     setIsCheckingOut(true);
+    setCheckoutStep(1); // Показываем модальное окно с Добби
 
     try {
       const res = await fetch('/api/checkout', {
@@ -183,24 +193,20 @@ export function ShopView() {
 
       if (!res.ok) {
         // Показываем ошибку
+        setCheckoutStep(0);
         toast.error(data.popupMessage || data.error, { duration: 5000 });
         setIsCheckingOut(false);
         return;
       }
 
-      // Успешное оформление - показываем последовательные PopUp
-      toast.info(data.steps[0].message, { duration: 10000 });
-      
+      // Ждём 10 секунд показывая Добби
       setTimeout(() => {
-        toast.success(data.steps[1].message, { duration: 3000 });
+        setCheckoutStep(2); // Показываем успех
         
-        // БАГ: "отправлено по указанному адресу доставки"
-        // Но адрес никто не указывал!
+        // Через 3 секунды закрываем
         setTimeout(() => {
-          toast.warning('🤔 Куда отправлено-то? Адрес ведь не указан...', { 
-            duration: 5000 
-          });
-        }, 3500);
+          setCheckoutStep(0);
+        }, 3000);
       }, 10000);
 
       // Очищаем корзину
@@ -212,6 +218,7 @@ export function ShopView() {
 
     } catch (error) {
       console.error('Checkout error:', error);
+      setCheckoutStep(0);
       toast.error('Ошибка оформления заказа');
     } finally {
       setIsCheckingOut(false);
@@ -237,21 +244,6 @@ export function ShopView() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Корзина в шапке */}
-      <div className="flex justify-end mb-6">
-        <button
-          onClick={() => setShowCart(!showCart)}
-          className="relative bg-gray-800 p-3 rounded-full hover:bg-gray-700 transition"
-        >
-          <ShoppingCart className="w-6 h-6 text-emerald-400" />
-          {cartTotalItems > 0 && (
-            <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center p-0">
-              {cartTotalItems}
-            </Badge>
-          )}
-        </button>
-      </div>
-
       {/* Боковая панель корзины */}
       {showCart && (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -335,6 +327,35 @@ export function ShopView() {
           </Card>
         </div>
       )}
+
+      {/* Модальное окно оформления заказа */}
+      <Dialog open={checkoutStep > 0} onOpenChange={() => {}}>
+        <DialogContent className="bg-gray-900 border-gray-800 max-w-md [&>button]:hidden">
+          <DialogHeader className="items-center text-center">
+            {checkoutStep === 1 && (
+              <>
+                <div className="relative mb-4">
+                  <Loader2 className="w-20 h-20 text-emerald-400 animate-spin" />
+                  <span className="absolute inset-0 flex items-center justify-center text-3xl">🧝</span>
+                </div>
+                <DialogTitle className="text-white text-xl">Добби достаёт товары со склада и упаковывает для Вас...</DialogTitle>
+                <DialogDescription className="text-gray-400 text-lg">
+                  Подожди чуток!
+                </DialogDescription>
+              </>
+            )}
+            {checkoutStep === 2 && (
+              <>
+                <div className="text-6xl mb-4">📦✨</div>
+                <DialogTitle className="text-emerald-400 text-xl">Заказ оформлен!</DialogTitle>
+                <DialogDescription className="text-gray-300">
+                  Всё упаковано и отправлено по указанному адресу доставки. Спасибо за покупку!
+                </DialogDescription>
+              </>
+            )}
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       {/* Товары по категориям */}
       {Object.entries(categories).map(([category, categoryProducts]) => (
