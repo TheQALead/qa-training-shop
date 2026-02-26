@@ -70,6 +70,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/db/custom.db
 
-# Entrypoint: create schema first, then start server
+# Entrypoint: create schema, start server in background, then init data
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "prisma db push --skip-generate && node server.js"]
+CMD ["sh", "-c", "prisma db push --skip-generate && node server.js & sleep 3 && curl -s http://localhost:3000/api/init && wait"]

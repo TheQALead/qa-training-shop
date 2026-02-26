@@ -19,7 +19,7 @@ model User {
   fullName     String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   cartItems    CartItem[]
   cards        Card[]
   loginLogs    LoginLog[]
@@ -37,7 +37,7 @@ model Product {
   imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   cartItems   CartItem[]
 }
 
@@ -49,10 +49,10 @@ model CartItem {
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, productId])
 }
 
@@ -68,7 +68,7 @@ model Card {
   isBuggy   Boolean  @default(false) // Бажная карта или нормальная
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -79,7 +79,7 @@ model LoginLog {
   login     String
   ip        String?
   timestamp DateTime @default(now())
-  
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -89,14 +89,23 @@ model VisorLog {
   userId    String
   login     String
   timestamp DateTime @default(now())
-  
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Настройки системы
 model Settings {
-  id             String   @id @default(cuid())
-  popupDuration  Float    @default(1) // Длительность PopUp в секундах
+  id                    String   @id @default(cuid())
+
+  // Настройки PopUp по типам уведомлений (в секундах)
+  popupSuccessDuration  Float    @default(2)    // Успешные операции (зелёные)
+  popupErrorDuration    Float    @default(3)    // Ошибки (красные)
+  popupWarningDuration  Float    @default(2.5)  // Предупреждения (жёлтые)
+  popupInfoDuration     Float    @default(1.5)  // Информационные (синие)
+
+  // Общая настройка (для обратной совместимости)
+  popupDuration         Float    @default(1)
+
   updatedAt      DateTime @updatedAt
 }
 
@@ -118,7 +127,7 @@ model Bug {
   defaultEnabled  Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   userBugs        UserBug[]
 }
 
@@ -131,9 +140,9 @@ model UserBug {
   found     Boolean  @default(false)    // Нашёл ли студент этот баг
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   bug       Bug      @relation(fields: [bugId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, bugId])  // Один баг на пользователя
 }

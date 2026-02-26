@@ -124,6 +124,10 @@ export function AdminView() {
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   
   const [popupDurationValue, setPopupDurationValue] = useState('1');
+  const [popupSuccessValue, setPopupSuccessValue] = useState('2');
+  const [popupErrorValue, setPopupErrorValue] = useState('3');
+  const [popupWarningValue, setPopupWarningValue] = useState('2.5');
+  const [popupInfoValue, setPopupInfoValue] = useState('1.5');
   
   // Состояние для багов
   const [bugs, setBugs] = useState<BugData[]>([]);
@@ -144,6 +148,10 @@ export function AdminView() {
         setVisorLogs(data.visorLogs || []);
         if (data.settings) {
           setPopupDurationValue(data.settings.popupDuration?.toString() || '1');
+          setPopupSuccessValue(data.settings.popupSuccessDuration?.toString() || '2');
+          setPopupErrorValue(data.settings.popupErrorDuration?.toString() || '3');
+          setPopupWarningValue(data.settings.popupWarningDuration?.toString() || '2.5');
+          setPopupInfoValue(data.settings.popupInfoDuration?.toString() || '1.5');
         }
       }
     } catch (error) {
@@ -375,7 +383,13 @@ export function AdminView() {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ popupDuration: parseFloat(popupDurationValue) }),
+        body: JSON.stringify({
+          popupDuration: parseFloat(popupDurationValue),
+          popupSuccessDuration: parseFloat(popupSuccessValue),
+          popupErrorDuration: parseFloat(popupErrorValue),
+          popupWarningDuration: parseFloat(popupWarningValue),
+          popupInfoDuration: parseFloat(popupInfoValue),
+        }),
       });
 
       if (res.ok) {
@@ -688,17 +702,67 @@ export function AdminView() {
         {/* Настройки */}
         <TabsContent value="settings">
           <Card className="bg-gray-900 border-gray-800">
-            <CardHeader><CardTitle className="text-white">Настройки PopUp</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-white">Настройки PopUp уведомлений</CardTitle>
+              <CardDescription className="text-gray-400">
+                Настройте время показа уведомлений для каждого типа (в секундах)
+              </CardDescription>
+            </CardHeader>
             <CardContent>
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <Label className="text-gray-300 text-lg">Длительность PopUp (секунды)</Label>
-                <p className="text-gray-500 text-sm mb-3">Время показа уведомлений</p>
-                <div className="flex items-center gap-4">
-                  <Input type="number" step="0.5" value={popupDurationValue} onChange={(e) => setPopupDurationValue(e.target.value)} className="bg-gray-700 border-gray-600 text-white w-24" />
-                  <span className="text-gray-400">секунд</span>
+              <div className="space-y-4">
+                {/* Успешные операции */}
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <Label className="text-gray-300 font-medium">Успешные операции</Label>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-2">Зелёные уведомления (успешный логин, добавление в корзину и т.д.)</p>
+                  <div className="flex items-center gap-4">
+                    <Input type="number" step="0.5" value={popupSuccessValue} onChange={(e) => setPopupSuccessValue(e.target.value)} className="bg-gray-700 border-gray-600 text-white w-24" />
+                    <span className="text-gray-400">секунд</span>
+                  </div>
+                </div>
+
+                {/* Ошибки */}
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <Label className="text-gray-300 font-medium">Ошибки</Label>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-2">Красные уведомления (ошибки авторизации, оплаты и т.д.)</p>
+                  <div className="flex items-center gap-4">
+                    <Input type="number" step="0.5" value={popupErrorValue} onChange={(e) => setPopupErrorValue(e.target.value)} className="bg-gray-700 border-gray-600 text-white w-24" />
+                    <span className="text-gray-400">секунд</span>
+                  </div>
+                </div>
+
+                {/* Предупреждения */}
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <Label className="text-gray-300 font-medium">Предупреждения</Label>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-2">Жёлтые уведомления (низкий баланс, предупреждения)</p>
+                  <div className="flex items-center gap-4">
+                    <Input type="number" step="0.5" value={popupWarningValue} onChange={(e) => setPopupWarningValue(e.target.value)} className="bg-gray-700 border-gray-600 text-white w-24" />
+                    <span className="text-gray-400">секунд</span>
+                  </div>
+                </div>
+
+                {/* Информационные */}
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <Label className="text-gray-300 font-medium">Информационные</Label>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-2">Синие уведомления (информация, подсказки)</p>
+                  <div className="flex items-center gap-4">
+                    <Input type="number" step="0.5" value={popupInfoValue} onChange={(e) => setPopupInfoValue(e.target.value)} className="bg-gray-700 border-gray-600 text-white w-24" />
+                    <span className="text-gray-400">секунд</span>
+                  </div>
                 </div>
               </div>
-              <Button onClick={saveSettings} className="bg-emerald-600 hover:bg-emerald-700 mt-4"><Save className="w-4 h-4 mr-2" />Сохранить</Button>
+              <Button onClick={saveSettings} className="bg-emerald-600 hover:bg-emerald-700 mt-6"><Save className="w-4 h-4 mr-2" />Сохранить настройки</Button>
             </CardContent>
           </Card>
         </TabsContent>

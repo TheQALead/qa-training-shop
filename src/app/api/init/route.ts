@@ -26,21 +26,18 @@ export async function GET() {
           login: 'student1',
           password: 'pass123',
           role: 'Student',
-          expertMode: false,
           fullName: 'Иванов Иван Иванович',
         },
         {
           login: 'student2',
           password: 'test456',
           role: 'Student',
-          expertMode: true,
           fullName: 'Петров Петр Петрович',
         },
         {
           login: 'visor1',
           password: 'visor123',
           role: 'Visor',
-          expertMode: false,
           fullName: 'Сидоров Сидор Сидорович',
         },
       ],
@@ -77,9 +74,13 @@ export async function GET() {
       ],
     });
 
-    // Создаем настройки
+    // Создаем настройки с расширенными полями
     await db.settings.create({
       data: {
+        popupSuccessDuration: 2,
+        popupErrorDuration: 3,
+        popupWarningDuration: 2.5,
+        popupInfoDuration: 1.5,
         popupDuration: 1,
       },
     });
