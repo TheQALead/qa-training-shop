@@ -83,7 +83,7 @@ export const useShopStore = create<ShopState>()(
       token: null,
       isAdmin: false,
       isAuthenticated: false,
-      currentView: 'login',
+      currentView: 'login' as const,
       showCart: false,
       products: [],
       categories: {},

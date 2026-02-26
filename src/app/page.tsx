@@ -11,7 +11,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ShoppingCart, Trash2, Plus, Minus, Package, X } from 'lucide-react';
 
@@ -37,145 +36,31 @@ async function fetchSettings() {
   }
 }
 
-// Компонент корзины в header
-function CartButton({ onClick, cartTotalItems, cartSum }: { onClick: () => void; cartTotalItems: number; cartSum: number }) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-2 px-4 py-2 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600/30 transition"
-    >
-      <ShoppingCart className="w-5 h-5" />
-      <span className="font-medium">{cartTotalItems}</span>
-      <span className="text-emerald-300">({formatPrice(cartSum)})</span>
-    </button>
-  );
-}
-
-// Компонент боковой панели корзины
-function CartPanel({ 
-  isOpen, 
-  onClose, 
-  cartItems, 
-  cartSum,
-  onUpdateQuantity,
-  onRemoveItem,
-  onCheckout,
-  isCheckingOut,
-  popupDuration
-}: { 
-  isOpen: boolean; 
-  onClose: () => void;
-  cartItems: any[];
-  cartSum: number;
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemoveItem: (productId: string) => void;
-  onCheckout: () => void;
-  isCheckingOut: boolean;
-  popupDuration: number;
-}) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div 
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
-      <Card className="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 rounded-none">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h2 className="text-xl font-bold text-white">🛒 Корзина</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
-        
-        <ScrollArea className="flex-1 h-[calc(100vh-200px)]">
-          <div className="p-4 space-y-4">
-            {cartItems.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>Корзина пуста</p>
-              </div>
-            ) : (
-              cartItems.map((item) => (
-                <div key={item.id} className="bg-gray-800 p-3 rounded-lg">
-                  <div className="flex gap-3">
-                    <img
-                      src={item.product.imageUrl || `https://via.placeholder.com/60?text=${item.product.name[0]}`}
-                      alt={item.product.name}
-                      className="w-16 h-16 rounded object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="text-white font-medium text-sm">{item.product.name}</p>
-                      <p className="text-emerald-400 text-sm">{formatPrice(item.product.price)}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)}
-                          className="p-1 bg-gray-700 rounded hover:bg-gray-600"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="text-white w-8 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
-                          className="p-1 bg-gray-700 rounded hover:bg-gray-600"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onRemoveItem(item.productId)}
-                          className="p-1 ml-auto text-red-400 hover:bg-red-400/20 rounded"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-gray-400">Итого:</span>
-            <span className="text-2xl font-bold text-emerald-400">{formatPrice(cartSum)}</span>
-          </div>
-          <Button
-            onClick={onCheckout}
-            disabled={cartItems.length === 0 || isCheckingOut}
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
-          >
-            {isCheckingOut ? '⏳ Оформление...' : '💳 Оплатить'}
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
+// Форматирование цены
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 
 export default function QATrainingShop() {
-  const { currentView, isAuthenticated, token, isAdmin, setView, logout, popupDuration, user, cartItems, cartSum, cartTotalItems, setCart } = useShopStore();
+  const { 
+    currentView, 
+    isAuthenticated, 
+    isAdmin, 
+    setView, 
+    logout, 
+    popupDuration, 
+    user, 
+    cartItems, 
+    cartSum, 
+    cartTotalItems, 
+    setCart,
+    token 
+  } = useShopStore();
+  
   const [isLoading, setIsLoading] = useState(true);
   const [showCart, setShowCart] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -198,8 +83,8 @@ export default function QATrainingShop() {
     try {
       const res = await fetch('/api/cart', {
         headers: {
-          'x-user-id': user?.id || '',
-          'x-role': user?.role || 'Student',
+          'x-user-id': user.id || '',
+          'x-role': user.role || 'Student',
         },
       });
       const data = await res.json();
@@ -218,9 +103,7 @@ export default function QATrainingShop() {
 
   // Обновить количество товара в корзине
   const updateQuantity = async (productId: string, newQuantity: number) => {
-    if (newQuantity < 1) {
-      return;
-    }
+    if (newQuantity < 1) return;
     try {
       const res = await fetch('/api/cart', {
         method: 'PUT',
@@ -370,11 +253,14 @@ export default function QATrainingShop() {
                   </button>
                   
                   {/* Корзина с суммой */}
-                  <CartButton 
+                  <button
                     onClick={() => setShowCart(true)}
-                    cartTotalItems={cartTotalItems}
-                    cartSum={cartSum}
-                  />
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600/30 transition"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="font-medium">{cartTotalItems}</span>
+                    <span className="text-emerald-300">({formatPrice(cartSum)})</span>
+                  </button>
                 </>
               )}
               
@@ -402,18 +288,86 @@ export default function QATrainingShop() {
       </main>
 
       {/* Боковая панель корзины */}
-      {!isAdmin && (
-        <CartPanel
-          isOpen={showCart}
-          onClose={() => setShowCart(false)}
-          cartItems={cartItems}
-          cartSum={cartSum}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={checkout}
-          isCheckingOut={isCheckingOut}
-          popupDuration={popupDuration}
-        />
+      {!isAdmin && showCart && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowCart(false)}
+          />
+          <Card className="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 rounded-none">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <h2 className="text-xl font-bold text-white">🛒 Корзина</h2>
+              <button
+                onClick={() => setShowCart(false)}
+                className="p-2 hover:bg-gray-800 rounded-lg transition"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="p-4 space-y-4">
+                {cartItems.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Корзина пуста</p>
+                  </div>
+                ) : (
+                  cartItems.map((item) => (
+                    <div key={item.id} className="bg-gray-800 p-3 rounded-lg">
+                      <div className="flex gap-3">
+                        <img
+                          src={item.product.imageUrl || `https://via.placeholder.com/60?text=${item.product.name[0]}`}
+                          alt={item.product.name}
+                          className="w-16 h-16 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <p className="text-white font-medium text-sm">{item.product.name}</p>
+                          <p className="text-emerald-400 text-sm">{formatPrice(item.product.price)}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                              className="p-1 bg-gray-700 rounded hover:bg-gray-600"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="text-white w-8 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                              className="p-1 bg-gray-700 rounded hover:bg-gray-600"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => removeFromCart(item.productId)}
+                              className="p-1 ml-auto text-red-400 hover:bg-red-400/20 rounded"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-gray-400">Итого:</span>
+                <span className="text-2xl font-bold text-emerald-400">{formatPrice(cartSum)}</span>
+              </div>
+              <Button
+                onClick={checkout}
+                disabled={cartItems.length === 0 || isCheckingOut}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+              >
+                {isCheckingOut ? '⏳ Оформление...' : '💳 Оплатить'}
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Модальное окно оформления заказа */}

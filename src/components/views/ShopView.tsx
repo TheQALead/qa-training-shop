@@ -1,29 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useShopStore, Product, CartItem } from '@/lib/store';
+import { useShopStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { 
-  ShoppingCart, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  Package,
-  X,
-  Loader2
-} from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 
 export function ShopView() {
   const { 
@@ -31,19 +14,13 @@ export function ShopView() {
     token, 
     products, 
     categories, 
-    cartItems, 
-    cartSum, 
-    cartTotalItems,
     popupDuration,
     setProducts, 
     setCart, 
     removeProductFromLocal 
   } = useShopStore();
   
-  const [showCart, setShowCart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState(0); // 0 - закрыт, 1 - добби, 2 - успех
 
   // Загрузка товаров
   const fetchProducts = useCallback(async () => {
@@ -107,42 +84,6 @@ export function ShopView() {
     }
   };
 
-  // Обновить количество
-  const updateQuantity = async (productId: string, newQuantity: number) => {
-    try {
-      const res = await fetch('/api/cart', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-          'X-Role': 'Green Power Ranger',
-        },
-        body: JSON.stringify({ productId, quantity: newQuantity }),
-      });
-
-      if (res.ok) {
-        fetchCart();
-      }
-    } catch (error) {
-      console.error('Update quantity error:', error);
-    }
-  };
-
-  // Удалить товар из корзины
-  const removeFromCart = async (productId: string) => {
-    try {
-      await fetch(`/api/cart?productId=${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'x-user-id': user?.id || '',
-        },
-      });
-      fetchCart();
-    } catch (error) {
-      console.error('Remove from cart error:', error);
-    }
-  };
-
   // БАГ: Фейковое удаление товара для Visor
   const deleteProduct = async (productId: string) => {
     try {
@@ -168,63 +109,6 @@ export function ShopView() {
     }
   };
 
-  // Оформление заказа
-  const checkout = async () => {
-    if (cartItems.length === 0) {
-      toast.error('Корзина пуста');
-      return;
-    }
-
-    setIsCheckingOut(true);
-    setCheckoutStep(1); // Показываем модальное окно с Добби
-
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-          'X-Role': 'Green Power Ranger',
-        },
-        body: JSON.stringify({}),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        // Показываем ошибку
-        setCheckoutStep(0);
-        toast.error(data.popupMessage || data.error, { duration: 5000 });
-        setIsCheckingOut(false);
-        return;
-      }
-
-      // Ждём 10 секунд показывая Добби
-      setTimeout(() => {
-        setCheckoutStep(2); // Показываем успех
-        
-        // Через 3 секунды закрываем
-        setTimeout(() => {
-          setCheckoutStep(0);
-        }, 3000);
-      }, 10000);
-
-      // Очищаем корзину
-      setCart([], 0, 0);
-      setShowCart(false);
-      
-      // Обновляем товары (остатки изменились)
-      fetchProducts();
-
-    } catch (error) {
-      console.error('Checkout error:', error);
-      setCheckoutStep(0);
-      toast.error('Ошибка оформления заказа');
-    } finally {
-      setIsCheckingOut(false);
-    }
-  };
-
   // Форматирование цены
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU', {
@@ -244,119 +128,6 @@ export function ShopView() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Боковая панель корзины */}
-      {showCart && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div 
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowCart(false)}
-          />
-          <Card className="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 rounded-none">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-xl font-bold text-white">🛒 Корзина</h2>
-              <button
-                onClick={() => setShowCart(false)}
-                className="p-2 hover:bg-gray-800 rounded-lg transition"
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-            
-            <ScrollArea className="flex-1 h-[calc(100vh-200px)]">
-              <div className="p-4 space-y-4">
-                {cartItems.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>Корзина пуста</p>
-                  </div>
-                ) : (
-                  cartItems.map((item) => (
-                    <div key={item.id} className="bg-gray-800 p-3 rounded-lg">
-                      <div className="flex gap-3">
-                        <img
-                          src={item.product.imageUrl || `https://via.placeholder.com/60?text=${item.product.name[0]}`}
-                          alt={item.product.name}
-                          className="w-16 h-16 rounded object-cover"
-                        />
-                        <div className="flex-1">
-                          <p className="text-white font-medium text-sm">{item.product.name}</p>
-                          <p className="text-emerald-400 text-sm">{formatPrice(item.product.price)}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <button
-                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                              className="p-1 bg-gray-700 rounded hover:bg-gray-600"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="text-white w-8 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                              className="p-1 bg-gray-700 rounded hover:bg-gray-600"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => removeFromCart(item.productId)}
-                              className="p-1 ml-auto text-red-400 hover:bg-red-400/20 rounded"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-400">Итого:</span>
-                {/* БАГ: Показываем БАЖНУЮ сумму! */}
-                <span className="text-2xl font-bold text-emerald-400">{formatPrice(cartSum)}</span>
-              </div>
-              <Button
-                onClick={checkout}
-                disabled={cartItems.length === 0 || isCheckingOut}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-              >
-                {isCheckingOut ? '⏳ Оформление...' : '💳 Оплатить'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Модальное окно оформления заказа */}
-      <Dialog open={checkoutStep > 0} onOpenChange={() => {}}>
-        <DialogContent className="bg-gray-900 border-gray-800 max-w-md [&>button]:hidden">
-          <DialogHeader className="items-center text-center">
-            {checkoutStep === 1 && (
-              <>
-                <div className="relative mb-4">
-                  <Loader2 className="w-20 h-20 text-emerald-400 animate-spin" />
-                  <span className="absolute inset-0 flex items-center justify-center text-3xl">🧝</span>
-                </div>
-                <DialogTitle className="text-white text-xl">Добби достаёт товары со склада и упаковывает для Вас...</DialogTitle>
-                <DialogDescription className="text-gray-400 text-lg">
-                  Подожди чуток!
-                </DialogDescription>
-              </>
-            )}
-            {checkoutStep === 2 && (
-              <>
-                <div className="text-6xl mb-4">📦✨</div>
-                <DialogTitle className="text-emerald-400 text-xl">Заказ оформлен!</DialogTitle>
-                <DialogDescription className="text-gray-300">
-                  Всё упаковано и отправлено по указанному адресу доставки. Спасибо за покупку!
-                </DialogDescription>
-              </>
-            )}
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-
       {/* Товары по категориям */}
       {Object.entries(categories).map(([category, categoryProducts]) => (
         <div key={category} className="mb-8">
