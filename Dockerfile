@@ -42,6 +42,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Install required system libraries for Prisma engine
 RUN apk add --no-cache dumb-init openssl libc6-compat
 
+# Install prisma CLI globally for runtime
+RUN npm install -g prisma@6.19.2
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -54,7 +57,6 @@ COPY --from=builder /app/.next/static ./.next/static
 # Copy Prisma files for runtime
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/prisma ./prisma
 
 # Create database directory and set permissions
@@ -69,6 +71,5 @@ ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/db/custom.db
 
 # Entrypoint: create schema first, then start server
-# Use node to run prisma CLI directly from node_modules
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "node ./node_modules/prisma/build/index.js db push --skip-generate && node server.js"]
+CMD ["sh", "-c", "prisma db push --skip-generate && node server.js"]
