@@ -39,7 +39,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install required packages
+# Install required system libraries for Prisma engine
 RUN apk add --no-cache dumb-init openssl libc6-compat
 
 # Create non-root user
@@ -54,10 +54,8 @@ COPY --from=builder /app/.next/static ./.next/static
 # Copy Prisma files for runtime
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/prisma ./prisma
-
-# Copy initialization scripts
-COPY --from=builder /app/scripts ./scripts
 
 # Create database directory and set permissions
 RUN mkdir -p /app/db && chown -R nextjs:nodejs /app
@@ -70,5 +68,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/db/custom.db
 
+# Entrypoint: create schema first, then start server
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "node scripts/init-data.js && node server.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && curl -s http://localhost:3000/api/init; node server.js"]
