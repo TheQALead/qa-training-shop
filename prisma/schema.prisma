@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователи системы
+model User {
+  id           String   @id @default(cuid())
+  login        String   @unique
+  password     String
+  role         String   @default("Student") // Student или Visor
+  fullName     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  cartItems    CartItem[]
+  cards        Card[]
+  loginLogs    LoginLog[]
+  visorLogs    VisorLog[]
+  userBugs     UserBug[]
+}
+
+// Товары
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  price       Float
+  stock       Int
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  cartItems   CartItem[]
+}
+
+// Корзина
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+}
+
+// Карты пользователя
+model Card {
+  id        String   @id @default(cuid())
+  userId    String
+  owner     String
+  number    String
+  date      String
+  cvv       String
+  balance   Float    @default(20000) // Баланс по умолчанию 20000 руб
+  isBuggy   Boolean  @default(false) // Бажная карта или нормальная
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Лог входов
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  login     String
+  ip        String?
+  timestamp DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Лог повышения прав до Visor
+model VisorLog {
+  id        String   @id @default(cuid())
+  userId    String
+  login     String
+  timestamp DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Настройки системы
+model Settings {
+  id             String   @id @default(cuid())
+  popupDuration  Float    @default(1) // Длительность PopUp в секундах
+  updatedAt      DateTime @updatedAt
+}
+
+// Админ (отдельная таблица для админки)
+model Admin {
+  id        String   @id @default(cuid())
+  login     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Шаблоны багов (глобальные)
+model Bug {
+  id              String   @id           // "charles-bug", "power-rangers", etc.
+  name            String                // Отображаемое имя
+  description     String                // Описание бага
+  category        String                // "auth", "cart", "cards", "ui", etc.
+  defaultEnabled  Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  userBugs        UserBug[]
+}
+
+// Состояние багов для конкретного пользователя
+model UserBug {
+  id        String   @id @default(cuid())
+  userId    String
+  bugId     String
+  enabled   Boolean  @default(true)     // Включен ли баг для этого пользователя
+  found     Boolean  @default(false)    // Нашёл ли студент этот баг
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bug       Bug      @relation(fields: [bugId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, bugId])  // Один баг на пользователя
+}
