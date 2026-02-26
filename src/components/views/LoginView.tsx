@@ -143,14 +143,7 @@ export function LoginView() {
                     onClick={() => setView('admin-login')}
                     className="w-full bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700 text-white animate-pulse"
                   >
-                    <span className="flex items-center gap-2">
-                      <img 
-                        src="https://images.unsplash.com/photo-1618944847828-82e943c3bdb7?w=24&h=24&fit=crop&crop=center" 
-                        alt="Chamber" 
-                        className="w-6 h-6 rounded-full border border-purple-400"
-                      />
-                      🐍 Тайная комната
-                    </span>
+                    🐍 Тайная комната
                   </Button>
                 )}
               </div>

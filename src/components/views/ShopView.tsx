@@ -62,7 +62,7 @@ export function ShopView() {
         },
       });
       const data = await res.json();
-      setCart(data.items || [], data.buggySum || 0, data.totalItems || 0);
+      setCart(data.items || [], data.sum || 0, data.totalItems || 0);
     } catch (error) {
       console.error('Fetch cart error:', error);
     }

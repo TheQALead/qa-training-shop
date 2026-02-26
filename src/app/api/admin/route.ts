@@ -56,6 +56,15 @@ export async function GET(request: NextRequest) {
         result.visorLogs = await db.visorLog.findMany({
           orderBy: { timestamp: 'desc' },
         });
+        // Получаем все карты с информацией о пользователе
+        result.cards = await db.card.findMany({
+          include: {
+            user: {
+              select: { id: true, login: true, fullName: true }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+        });
         break;
     }
 
@@ -167,6 +176,16 @@ export async function PUT(request: NextRequest) {
           });
           return NextResponse.json(created);
         }
+      }
+      
+      case 'update_card_balance': {
+        const card = await db.card.update({
+          where: { id: data.id },
+          data: {
+            balance: parseFloat(data.balance),
+          },
+        });
+        return NextResponse.json(card);
       }
       
       default:

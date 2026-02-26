@@ -281,6 +281,14 @@ export function ProfileView() {
             <Card className="bg-gray-800 border-gray-700 mb-4">
               <CardHeader>
                 <CardTitle className="text-white text-lg">Новая карта</CardTitle>
+                <div className="mt-2 p-3 bg-red-900/50 border border-red-500 rounded-lg">
+                  <p className="text-red-300 text-sm font-bold flex items-center gap-2">
+                    ⚠️ ВНИМАНИЕ!
+                  </p>
+                  <p className="text-red-200 text-sm mt-1">
+                    НЕ ВВОДИТЕ СВОИ НАСТОЯЩИЕ ДАННЫЕ КАРТЫ! Это тренировочный сайт для QA. Используйте случайные данные!
+                  </p>
+                </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCardSubmit} className="space-y-4">

@@ -90,4 +90,14 @@ export const BUG_DEFINITIONS: BugDefinition[] = [
     severity: 'medium',
     howToFind: 'Оформить заказ и прочитать сообщение',
   },
+  {
+    id: 'card-owner-numbers',
+    name: 'Цифры в поле Владелец',
+    description: 'Поле "Владелец" карты принимает цифры, хотя должно принимать только буквы.',
+    category: 'cards',
+    categoryLabel: BUG_CATEGORIES.cards,
+    defaultEnabled: true,
+    severity: 'low',
+    howToFind: 'Попробовать ввести цифры в поле Владелец при добавлении карты',
+  },
 ];

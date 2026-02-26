@@ -41,7 +41,8 @@ import {
   Save,
   Eye,
   Shield,
-  Bug
+  Bug,
+  CreditCard
 } from 'lucide-react';
 
 interface AdminUser {
@@ -100,12 +101,29 @@ interface UserWithBugs {
   userBugs: UserBugData[];
 }
 
+interface AdminCard {
+  id: string;
+  userId: string;
+  owner: string;
+  number: string;
+  date: string;
+  cvv: string;
+  balance: number;
+  isBuggy: boolean;
+  user: {
+    id: string;
+    login: string;
+    fullName: string | null;
+  };
+}
+
 export function AdminView() {
   const { user, popupDuration, setPopupDuration } = useShopStore();
   const [isLoading, setIsLoading] = useState(true);
   
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [cards, setCards] = useState<AdminCard[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [visorLogs, setVisorLogs] = useState<VisorLog[]>([]);
   
@@ -144,6 +162,7 @@ export function AdminView() {
         const data = await res.json();
         setUsers(data.users || []);
         setProducts(data.products || []);
+        setCards(data.cards || []);
         setLoginLogs(data.loginLogs || []);
         setVisorLogs(data.visorLogs || []);
         if (data.settings) {
@@ -401,6 +420,26 @@ export function AdminView() {
     }
   };
 
+  const updateCardBalance = async (cardId: string, newBalance: number) => {
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_card_balance',
+          data: { id: cardId, balance: newBalance },
+        }),
+      });
+
+      if (res.ok) {
+        toast.success('Баланс карты обновлён');
+        fetchData();
+      }
+    } catch (error) {
+      toast.error('Ошибка обновления баланса');
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('ru-RU', {
       day: '2-digit',
@@ -436,6 +475,9 @@ export function AdminView() {
           </TabsTrigger>
           <TabsTrigger value="products" className="data-[state=active]:bg-red-600 data-[state=inactive]:text-white">
             <Package className="w-4 h-4 mr-2" />Товары
+          </TabsTrigger>
+          <TabsTrigger value="cards" className="data-[state=active]:bg-red-600 data-[state=inactive]:text-white">
+            <CreditCard className="w-4 h-4 mr-2" />Карты
           </TabsTrigger>
           <TabsTrigger value="login-logs" className="data-[state=active]:bg-red-600 data-[state=inactive]:text-white">
             <History className="w-4 h-4 mr-2" />Лог входов
@@ -655,6 +697,89 @@ export function AdminView() {
                   ))}
                 </div>
               </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Карты */}
+        <TabsContent value="cards">
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">Управление картами</CardTitle>
+              <CardDescription className="text-gray-400">
+                Изменение баланса карт пользователей
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {cards.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CreditCard className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Нет карт</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-96">
+                  <div className="space-y-2">
+                    {cards.map((card) => (
+                      <div key={card.id} className="bg-gray-800 p-4 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-white font-medium">{card.user.login}</p>
+                              {card.user.fullName && (
+                                <span className="text-gray-400 text-sm">({card.user.fullName})</span>
+                              )}
+                              {card.isBuggy && (
+                                <Badge className="bg-yellow-600 text-xs">Бажная</Badge>
+                              )}
+                            </div>
+                            <p className="text-gray-400 text-sm">
+                              •••• {card.number.slice(-4)} | {card.owner}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="text-gray-400 text-xs">Баланс</p>
+                              <p className="text-emerald-400 font-bold">
+                                {new Intl.NumberFormat('ru-RU', {
+                                  style: 'currency',
+                                  currency: 'RUB',
+                                  maximumFractionDigits: 0,
+                                }).format(card.balance)}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                onClick={() => updateCardBalance(card.id, card.balance + 10000)}
+                                size="sm"
+                                variant="outline"
+                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
+                              >
+                                +10K
+                              </Button>
+                              <Button
+                                onClick={() => updateCardBalance(card.id, card.balance + 50000)}
+                                size="sm"
+                                variant="outline"
+                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
+                              >
+                                +50K
+                              </Button>
+                              <Button
+                                onClick={() => updateCardBalance(card.id, card.balance + 100000)}
+                                size="sm"
+                                variant="outline"
+                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
+                              >
+                                +100K
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
