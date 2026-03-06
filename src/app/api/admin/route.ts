@@ -40,6 +40,10 @@ export async function GET(request: NextRequest) {
         result.visorLogs = await db.visorLog.findMany({
           orderBy: { timestamp: 'desc' },
         });
+        result.easterEggLogs = await db.easterEggLog.findMany({
+          orderBy: { timestamp: 'desc' },
+          take: 100,
+        });
         break;
         
       case 'all':
@@ -55,6 +59,10 @@ export async function GET(request: NextRequest) {
         });
         result.visorLogs = await db.visorLog.findMany({
           orderBy: { timestamp: 'desc' },
+        });
+        result.easterEggLogs = await db.easterEggLog.findMany({
+          orderBy: { timestamp: 'desc' },
+          take: 100,
         });
         // Получаем все карты с информацией о пользователе
         result.cards = await db.card.findMany({

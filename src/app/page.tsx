@@ -36,6 +36,37 @@ async function fetchSettings() {
   }
 }
 
+// Проверка авторизации при загрузке
+async function verifyAuth() {
+  const { token, setUser, logout } = useShopStore.getState();
+  
+  if (!token) {
+    logout();
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/auth/verify', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    const data = await res.json();
+    
+    if (!data.valid || !data.user) {
+      logout();
+      return;
+    }
+    
+    // Обновляем данные пользователя
+    setUser(data.user, token || undefined, data.isAdmin);
+  } catch (error) {
+    console.error('Auth verify error:', error);
+    logout();
+  }
+}
+
 // Форматирование цены
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('ru-RU', {
@@ -71,6 +102,7 @@ export default function QATrainingShop() {
     const init = async () => {
       await initDatabase();
       await fetchSettings();
+      await verifyAuth();
       setIsLoading(false);
     };
     init();

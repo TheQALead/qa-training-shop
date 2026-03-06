@@ -93,6 +93,16 @@ model VisorLog {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// Лог пасхалок (попытки входа с фейковыми данными и т.д.)
+model EasterEggLog {
+  id        String   @id @default(cuid())
+  type      String            // Тип пасхалки: "fake-admin-attempt"
+  login     String?           // Введённый логин
+  data      String?           // Дополнительные данные (JSON)
+  ip        String?
+  timestamp DateTime @default(now())
+}
+
 // Настройки системы
 model Settings {
   id                    String   @id @default(cuid())

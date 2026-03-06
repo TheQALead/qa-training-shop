@@ -78,6 +78,15 @@ interface VisorLog {
   timestamp: string;
 }
 
+interface EasterEggLog {
+  id: string;
+  type: string;
+  login: string | null;
+  data: string | null;
+  ip: string | null;
+  timestamp: string;
+}
+
 interface BugData {
   id: string;
   name: string;
@@ -117,6 +126,75 @@ interface AdminCard {
   };
 }
 
+// Компонент для редактирования баланса карты
+function CardBalanceEditor({ 
+  card, 
+  onUpdateBalance 
+}: { 
+  card: AdminCard; 
+  onUpdateBalance: (cardId: string, newBalance: number) => void;
+}) {
+  const [editValue, setEditValue] = useState(card.balance.toString());
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleBlur = async () => {
+    const newBalance = parseFloat(editValue);
+    
+    // Если значение не изменилось, не сохраняем
+    if (newBalance === card.balance || isNaN(newBalance)) {
+      setEditValue(card.balance.toString());
+      return;
+    }
+    
+    // Сохраняем
+    setIsSaving(true);
+    await onUpdateBalance(card.id, newBalance);
+    setIsSaving(false);
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  return (
+    <div className="bg-gray-800 p-4 rounded-lg">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-white font-medium">{card.user.login}</p>
+            {card.user.fullName && (
+              <span className="text-gray-400 text-sm">({card.user.fullName})</span>
+            )}
+            {card.isBuggy && (
+              <Badge className="bg-yellow-600 text-xs">Бажная</Badge>
+            )}
+          </div>
+          <p className="text-gray-400 text-sm">
+            •••• {card.number.slice(-4)} | {card.owner}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-gray-400 text-xs mb-1">Баланс</p>
+            <Input
+              type="number"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleBlur}
+              disabled={isSaving}
+              className="w-32 bg-gray-700 border-gray-600 text-emerald-400 font-bold text-right"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminView() {
   const { user, popupDuration, setPopupDuration } = useShopStore();
   const [isLoading, setIsLoading] = useState(true);
@@ -126,6 +204,7 @@ export function AdminView() {
   const [cards, setCards] = useState<AdminCard[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [visorLogs, setVisorLogs] = useState<VisorLog[]>([]);
+  const [easterEggLogs, setEasterEggLogs] = useState<EasterEggLog[]>([]);
   
   const [newUserLogin, setNewUserLogin] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -165,6 +244,7 @@ export function AdminView() {
         setCards(data.cards || []);
         setLoginLogs(data.loginLogs || []);
         setVisorLogs(data.visorLogs || []);
+        setEasterEggLogs(data.easterEggLogs || []);
         if (data.settings) {
           setPopupDurationValue(data.settings.popupDuration?.toString() || '1');
           setPopupSuccessValue(data.settings.popupSuccessDuration?.toString() || '2');
@@ -720,62 +800,11 @@ export function AdminView() {
                 <ScrollArea className="h-96">
                   <div className="space-y-2">
                     {cards.map((card) => (
-                      <div key={card.id} className="bg-gray-800 p-4 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="text-white font-medium">{card.user.login}</p>
-                              {card.user.fullName && (
-                                <span className="text-gray-400 text-sm">({card.user.fullName})</span>
-                              )}
-                              {card.isBuggy && (
-                                <Badge className="bg-yellow-600 text-xs">Бажная</Badge>
-                              )}
-                            </div>
-                            <p className="text-gray-400 text-sm">
-                              •••• {card.number.slice(-4)} | {card.owner}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <p className="text-gray-400 text-xs">Баланс</p>
-                              <p className="text-emerald-400 font-bold">
-                                {new Intl.NumberFormat('ru-RU', {
-                                  style: 'currency',
-                                  currency: 'RUB',
-                                  maximumFractionDigits: 0,
-                                }).format(card.balance)}
-                              </p>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                onClick={() => updateCardBalance(card.id, card.balance + 10000)}
-                                size="sm"
-                                variant="outline"
-                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
-                              >
-                                +10K
-                              </Button>
-                              <Button
-                                onClick={() => updateCardBalance(card.id, card.balance + 50000)}
-                                size="sm"
-                                variant="outline"
-                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
-                              >
-                                +50K
-                              </Button>
-                              <Button
-                                onClick={() => updateCardBalance(card.id, card.balance + 100000)}
-                                size="sm"
-                                variant="outline"
-                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
-                              >
-                                +100K
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <CardBalanceEditor 
+                        key={card.id} 
+                        card={card} 
+                        onUpdateBalance={updateCardBalance}
+                      />
                     ))}
                   </div>
                 </ScrollArea>
@@ -806,18 +835,47 @@ export function AdminView() {
         {/* Пасхалки */}
         <TabsContent value="visor-logs">
           <Card className="bg-gray-900 border-gray-800">
-            <CardHeader><CardTitle className="text-white flex items-center gap-2"><Eye className="w-5 h-5 text-purple-500" />Лог повышения прав</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-white flex items-center gap-2"><Eye className="w-5 h-5 text-purple-500" />Лог пасхалок</CardTitle></CardHeader>
             <CardContent>
               <ScrollArea className="h-96">
                 <div className="space-y-2">
-                  {visorLogs.length === 0 ? <p className="text-gray-500 text-center py-8">Нет записей</p> : visorLogs.map((log) => (
-                    <div key={log.id} className="bg-gradient-to-r from-purple-900/50 to-red-900/50 p-3 rounded-lg border border-purple-700/50">
-                      <div className="flex items-center justify-between">
-                        <div><p className="text-white font-medium">{log.login}</p><p className="text-purple-300 text-sm">Повышение прав до Visor</p></div>
-                        <span className="text-gray-400 text-sm">{formatDate(log.timestamp)}</span>
-                      </div>
-                    </div>
-                  ))}
+                  {/* Попытки входа с фейковыми данными */}
+                  {easterEggLogs.length > 0 && (
+                    <>
+                      <p className="text-gray-400 text-sm mb-2">🤡 Попытки входа с фейковыми данными:</p>
+                      {easterEggLogs.map((log) => (
+                        <div key={log.id} className="bg-gradient-to-r from-red-900/50 to-orange-900/50 p-3 rounded-lg border border-red-700/50 mb-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-white font-medium">{log.login || 'unknown'}</p>
+                              <p className="text-red-300 text-sm">Пробовал войти в админку с подсказки</p>
+                              <p className="text-gray-500 text-xs">IP: {log.ip || 'unknown'}</p>
+                            </div>
+                            <span className="text-gray-400 text-sm">{formatDate(log.timestamp)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  
+                  {/* Power Rangers Easter Egg */}
+                  {visorLogs.length > 0 && (
+                    <>
+                      <p className="text-gray-400 text-sm mt-4 mb-2">🦾 Power Rangers Easter Egg:</p>
+                      {visorLogs.map((log) => (
+                        <div key={log.id} className="bg-gradient-to-r from-purple-900/50 to-red-900/50 p-3 rounded-lg border border-purple-700/50 mb-2">
+                          <div className="flex items-center justify-between">
+                            <div><p className="text-white font-medium">{log.login}</p><p className="text-purple-300 text-sm">Повышение прав до Visor</p></div>
+                            <span className="text-gray-400 text-sm">{formatDate(log.timestamp)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  
+                  {easterEggLogs.length === 0 && visorLogs.length === 0 && (
+                    <p className="text-gray-500 text-center py-8">Нет записей</p>
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>

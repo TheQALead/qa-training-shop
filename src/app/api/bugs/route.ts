@@ -26,6 +26,18 @@ export async function GET(request: NextRequest) {
           })),
         });
         bugs = await db.bug.findMany();
+      } else {
+        // Синхронизируем defaultEnabled с определениями
+        for (const def of BUG_DEFINITIONS) {
+          const existingBug = bugs.find(b => b.id === def.id);
+          if (existingBug && existingBug.defaultEnabled !== def.defaultEnabled) {
+            await db.bug.update({
+              where: { id: def.id },
+              data: { defaultEnabled: def.defaultEnabled },
+            });
+          }
+        }
+        bugs = await db.bug.findMany();
       }
 
       // Получаем пользователей с их багами

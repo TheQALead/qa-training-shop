@@ -24,10 +24,10 @@ export const BUG_DEFINITIONS: BugDefinition[] = [
   {
     id: 'charles-bug',
     name: 'Charles Bug',
-    description: 'Frontend добавляет "!" в конец пароля. В Expert Mode сервер проверяет строго.',
+    description: 'Frontend добавляет "!" в конец пароля. Для входа нужно перехватить и удалить "!" через Charles.',
     category: 'auth',
     categoryLabel: BUG_CATEGORIES.auth,
-    defaultEnabled: true,
+    defaultEnabled: false,
     severity: 'high',
     howToFind: 'Через Charles перехватить запрос и удалить "!" из пароля',
   },
