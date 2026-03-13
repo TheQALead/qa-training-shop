@@ -37,13 +37,18 @@ export async function POST(request: NextRequest) {
 
     // Проверка пароля
     if (charlesBugEnabled) {
-      // Баг включен: пароль уходит с "!" или без - принимаем оба варианта
-      const cleanPassword = password.endsWith('!') ? password.slice(0, -1) : password;
-      if (cleanPassword !== user.password && password !== user.password) {
+      // Баг включен: Frontend добавляет "!" в конец пароля
+      // Ученик должен через Charles удалить этот "!"
+      // Если пароль заканчивается на "!" - это "бажный" пароль, НЕ пускаем
+      if (password.endsWith('!')) {
+        return NextResponse.json({ error: 'Неверный пароль' }, { status: 401 });
+      }
+      // Пароль без "!" - значит ученик перехватил и исправил через Charles
+      if (password !== user.password) {
         return NextResponse.json({ error: 'Неверный пароль' }, { status: 401 });
       }
     } else {
-      // Баг выключен: строгая проверка
+      // Баг выключен: строгая проверка, пароль должен совпадать
       if (password !== user.password) {
         return NextResponse.json({ error: 'Неверный пароль' }, { status: 401 });
       }

@@ -42,7 +42,8 @@ import {
   Eye,
   Shield,
   Bug,
-  CreditCard
+  CreditCard,
+  RefreshCw
 } from 'lucide-react';
 
 interface AdminUser {
@@ -540,10 +541,20 @@ export function AdminView() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-        <Shield className="w-8 h-8 text-red-500" />
-        Панель администратора
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <Shield className="w-8 h-8 text-red-500" />
+          Панель администратора
+        </h1>
+        <Button
+          onClick={() => { fetchData(); fetchBugs(); }}
+          variant="outline"
+          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Обновить данные
+        </Button>
+      </div>
 
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="bg-gray-900 border border-gray-800 mb-4 flex-wrap">
