@@ -71,10 +71,34 @@ export default function QATrainingShop() {
     const init = async () => {
       await initDatabase();
       await fetchSettings();
+      
+      // Проверяем авторизацию при загрузке
+      if (token && isAuthenticated && user) {
+        try {
+          const res = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          
+          const data = await res.json();
+          
+          if (data.valid) {
+            // Обновляем данные пользователя
+            useShopStore.getState().setUser(data.user, token, data.isAdmin);
+          } else {
+            // Токен невалиден - выходим
+            logout();
+          }
+        } catch (error) {
+          console.error('Auth verify error:', error);
+        }
+      }
+      
       setIsLoading(false);
     };
     init();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Загрузка корзины
   const fetchCart = useCallback(async () => {

@@ -8,6 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface BugsStatus {
+  'charles-bug'?: boolean;
+  [key: string]: boolean | undefined;
+}
+
 export function LoginView() {
   const { setUser, setView } = useShopStore();
   const [login, setLogin] = useState('');
@@ -15,20 +20,39 @@ export function LoginView() {
   const [isLoading, setIsLoading] = useState(false);
   const [secretInput, setSecretInput] = useState('');
   const [showSecretButton, setShowSecretButton] = useState(false);
+  const [bugsStatus, setBugsStatus] = useState<BugsStatus>({});
+
+  // Получаем состояние багов при изменении логина
+  const checkBugsStatus = async (userLogin: string) => {
+    if (!userLogin) return;
+    try {
+      const res = await fetch(`/api/bugs/status?login=${encodeURIComponent(userLogin)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBugsStatus(data.bugs);
+      }
+    } catch (error) {
+      console.error('Error checking bugs status:', error);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // БАГ CHARLES: Frontend ВСЕГДА добавляет "!" в конец пароля
+      // БАГ CHARLES: Frontend добавляет "!" в конец пароля ТОЛЬКО если баг включен
       // Ученик должен через Charles перехватить и удалить этот символ
-      const buggyPassword = password + '!';
+      const charlesBugEnabled = bugsStatus['charles-bug'] ?? false;
+      const buggyPassword = charlesBugEnabled ? password + '!' : password;
       
       // Скрытый лог для QA (только в консоли разработчика)
       console.log('🔍 [DEBUG] Original password:', password);
       console.log('🔍 [DEBUG] Password sent to server:', buggyPassword);
-      console.log('🔍 [DEBUG] Hint: Notice the "!" at the end? Check Charles...');
+      console.log('🔍 [DEBUG] Charles bug enabled:', charlesBugEnabled);
+      if (charlesBugEnabled) {
+        console.log('🔍 [DEBUG] Hint: Notice the "!" at the end? Check Charles...');
+      }
 
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -40,7 +64,7 @@ export function LoginView() {
         },
         body: JSON.stringify({
           login,
-          password: buggyPassword, // Отправляем пароль с "!"
+          password: buggyPassword,
         }),
       });
 
@@ -95,6 +119,7 @@ export function LoginView() {
                   type="text"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
+                  onBlur={(e) => checkBugsStatus(e.target.value)}
                   placeholder="Введите логин"
                   required
                   className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-emerald-500"

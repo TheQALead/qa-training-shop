@@ -151,6 +151,9 @@ export function AdminView() {
   const [bugs, setBugs] = useState<BugData[]>([]);
   const [usersWithBugs, setUsersWithBugs] = useState<UserWithBugs[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  
+  // Состояние для редактируемых балансов карт
+  const [cardBalances, setCardBalances] = useState<Record<string, string>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -440,6 +443,34 @@ export function AdminView() {
     }
   };
 
+  // Обработчик изменения баланса в поле ввода
+  const handleBalanceChange = (cardId: string, value: string) => {
+    setCardBalances(prev => ({ ...prev, [cardId]: value }));
+  };
+
+  // Сохранение баланса при потере фокуса (только если изменилось)
+  const handleBalanceBlur = (cardId: string, originalBalance: number) => {
+    const inputValue = cardBalances[cardId];
+    if (inputValue === undefined) return;
+    
+    const newBalance = parseInt(inputValue.replace(/\D/g, ''), 10);
+    
+    // Если значение не изменилось или некорректно - ничего не делаем
+    if (isNaN(newBalance) || newBalance === originalBalance) {
+      return;
+    }
+    
+    updateCardBalance(cardId, newBalance);
+  };
+
+  // Получить значение для отображения в поле ввода
+  const getDisplayBalance = (cardId: string, originalBalance: number): string => {
+    if (cardBalances[cardId] !== undefined) {
+      return cardBalances[cardId];
+    }
+    return originalBalance.toString();
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('ru-RU', {
       day: '2-digit',
@@ -707,7 +738,7 @@ export function AdminView() {
             <CardHeader>
               <CardTitle className="text-white">Управление картами</CardTitle>
               <CardDescription className="text-gray-400">
-                Изменение баланса карт пользователей
+                Нажмите на баланс для редактирования. Сохранение при потере фокуса.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -737,41 +768,16 @@ export function AdminView() {
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <p className="text-gray-400 text-xs">Баланс</p>
-                              <p className="text-emerald-400 font-bold">
-                                {new Intl.NumberFormat('ru-RU', {
-                                  style: 'currency',
-                                  currency: 'RUB',
-                                  maximumFractionDigits: 0,
-                                }).format(card.balance)}
-                              </p>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                onClick={() => updateCardBalance(card.id, card.balance + 10000)}
-                                size="sm"
-                                variant="outline"
-                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
-                              >
-                                +10K
-                              </Button>
-                              <Button
-                                onClick={() => updateCardBalance(card.id, card.balance + 50000)}
-                                size="sm"
-                                variant="outline"
-                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
-                              >
-                                +50K
-                              </Button>
-                              <Button
-                                onClick={() => updateCardBalance(card.id, card.balance + 100000)}
-                                size="sm"
-                                variant="outline"
-                                className="border-emerald-600 text-emerald-400 hover:bg-emerald-600/20"
-                              >
-                                +100K
-                              </Button>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-gray-400 text-xs">Баланс:</Label>
+                              <Input
+                                type="text"
+                                value={getDisplayBalance(card.id, card.balance)}
+                                onChange={(e) => handleBalanceChange(card.id, e.target.value)}
+                                onBlur={() => handleBalanceBlur(card.id, card.balance)}
+                                className="bg-gray-700 border-gray-600 text-emerald-400 font-bold w-32 text-right"
+                              />
+                              <span className="text-gray-400">₽</span>
                             </div>
                           </div>
                         </div>

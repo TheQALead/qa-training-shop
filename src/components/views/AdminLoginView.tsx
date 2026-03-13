@@ -7,6 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ArrowLeft } from 'lucide-react';
 
 export function AdminLoginView() {
@@ -14,9 +22,33 @@ export function AdminLoginView() {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTrapDialog, setShowTrapDialog] = useState(false);
+
+  // Фейковые креды для ловушки
+  const TRAP_LOGIN = 'MakarovAdministrator';
+  const TRAP_PASSWORD = 'QAAdmininistrator1';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Проверяем ловушку
+    if (login === TRAP_LOGIN && password === TRAP_PASSWORD) {
+      // Логируем попытку в пасхалки
+      try {
+        await fetch('/api/admin/trap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login }),
+        });
+      } catch (error) {
+        console.error('Trap log error:', error);
+      }
+      
+      setShowTrapDialog(true);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -109,12 +141,32 @@ export function AdminLoginView() {
 
             <div className="mt-6 pt-6 border-t border-gray-800">
               <p className="text-gray-500 text-sm text-center">
-                Подсказка для тестировщиков: логин <code className="bg-gray-800 px-1 rounded">Makarov</code>, пароль <code className="bg-gray-800 px-1 rounded">QAAdmin</code>
+                Подсказка чтобы не забыть: логин <code className="bg-gray-800 px-1 rounded">MakarovAdministrator</code>, пароль <code className="bg-gray-800 px-1 rounded">QAAdmininistrator1</code>
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Диалог-ловушка */}
+      <Dialog open={showTrapDialog} onOpenChange={setShowTrapDialog}>
+        <DialogContent className="bg-gray-900 border-red-600 border-2 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-500 text-center text-2xl">😂 Попался!</DialogTitle>
+            <DialogDescription className="text-center text-lg text-white pt-4">
+              Ты правда думал, что это будет так просто - Ахахахаха
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center mt-4">
+            <Button
+              onClick={() => setShowTrapDialog(false)}
+              className="bg-gray-700 hover:bg-gray-600 text-white"
+            >
+              Всё понял, осознал
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
